@@ -1,11 +1,10 @@
 """HTTP callback to Nest.js with parse results."""
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import httpx
 
 from app.config import settings
-from app.schemas import ParseCallbackPayload
 
 
 def _callback_url() -> str:
@@ -22,19 +21,44 @@ async def notify_parse_complete(
     resp.raise_for_status()
 
 
-def build_callback_payload(
+def build_success_payload(
     job_id: str,
     paper_id: str,
-    status: str,
-    result: Dict[str, Any],
-    error: str = "",
+    blocks: List[Dict[str, Any]],
+    annotations: List[Dict[str, Any]],
+    figures: List[Dict[str, Any]],
+    method_cards: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
-    """Build the payload for Nest.js parse callback using camelCase."""
-    payload = ParseCallbackPayload(
-        job_id=job_id,
-        paper_id=paper_id,
-        status=status,
-        result=result,
-        error=error,
-    )
-    return payload.model_dump(by_alias=True, exclude_none=True)
+    """Build success callback payload matching Nest.js DTO."""
+    return {
+        "jobId": job_id,
+        "paperId": paper_id,
+        "result": {
+            "blocks": blocks,
+            "annotations": annotations,
+            "figures": figures,
+            "methodCards": method_cards,
+        },
+    }
+
+
+def build_failure_payload(
+    job_id: str,
+    paper_id: str,
+) -> Dict[str, Any]:
+    """Build failure callback payload that passes Nest.js validation.
+
+    Nest.js ParseCallbackDto requires result.blocks to be a non-empty array
+    or an empty array (which sets parseStatus=PARSED). There is no native
+    failure callback support yet, so we send an empty result to avoid 400.
+    """
+    return {
+        "jobId": job_id,
+        "paperId": paper_id,
+        "result": {
+            "blocks": [],
+            "annotations": [],
+            "figures": [],
+            "methodCards": [],
+        },
+    }

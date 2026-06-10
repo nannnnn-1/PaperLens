@@ -57,6 +57,7 @@ class ParseJobPayload(NestJsModel):
     job_id: str
     paper_id: str
     file_url: str
+    object_key: str = ""
 
 
 class ParseCallbackPayload(NestJsModel):
@@ -96,6 +97,7 @@ class SemanticBlock(BaseModel):
     translation: Optional[str] = None
     page_number: Optional[int] = None
     bbox: Optional[BBox] = None
+    embedding: Optional[List[float]] = None
 
 
 # ==================== Annotations ====================

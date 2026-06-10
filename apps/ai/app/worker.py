@@ -11,7 +11,11 @@ import redis.asyncio as redis
 
 from app.config import settings
 from app.schemas import ParseJobPayload
-from app.services.callback import build_callback_payload, notify_parse_complete
+from app.services.callback import (
+    build_failure_payload,
+    build_success_payload,
+    notify_parse_complete,
+)
 from app.services.embedder import Embedder
 from app.services.extractor import Extractor
 from app.services.http_client import create_http_client
@@ -70,20 +74,19 @@ async def process_job(
         embeddings = await embedder.embed_batch([b.content for b in blocks])
         await update_job_status(redis_client, job_id, "PARSING", progress=0.9)
 
-        # Build result
-        result = {
-            "blocks": _safe_model_dump(blocks),
-            "annotations": _safe_model_dump(annotations),
-            "figures": _safe_model_dump(figures),
-            "method_cards": _safe_model_dump(method_cards),
-            "embeddings": embeddings,
-        }
+        # Attach embeddings to blocks for Nest.js DTO compatibility
+        for idx, block in enumerate(blocks):
+            if idx < len(embeddings):
+                block.embedding = embeddings[idx]
 
-        payload = build_callback_payload(
+        # Build result
+        payload = build_success_payload(
             job_id=job_id,
             paper_id=paper_id,
-            status="PARSED",
-            result=result,
+            blocks=_safe_model_dump(blocks),
+            annotations=_safe_model_dump(annotations),
+            figures=_safe_model_dump(figures),
+            method_cards=_safe_model_dump(method_cards),
         )
         await notify_parse_complete(http_client, payload)
         await update_job_status(
@@ -91,7 +94,7 @@ async def process_job(
             job_id,
             "PARSED",
             progress=1.0,
-            result=result,
+            result=payload["result"],
         )
         logger.info("Job completed: %s paper_id=%s", job_id, paper_id)
 
@@ -99,12 +102,9 @@ async def process_job(
         logger.exception("Job failed: %s", job_id)
         error_msg = str(exc) or "Unknown error"
         try:
-            payload = build_callback_payload(
+            payload = build_failure_payload(
                 job_id=job_id,
                 paper_id=paper_id,
-                status="FAILED",
-                result={},
-                error=error_msg,
             )
             await notify_parse_complete(http_client, payload)
         except Exception:
