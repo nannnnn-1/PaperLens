@@ -1,28 +1,55 @@
-from fastapi import APIRouter, BackgroundTasks
-from pydantic import BaseModel
+"""Parse task submission and status endpoints."""
+
+import uuid
+
+import redis.asyncio as redis
+from fastapi import APIRouter, Depends
+
+from app.dependencies import get_redis
+from app.schemas import (
+    ApiResponse,
+    ParseJobPayload,
+    ParseRequest,
+    ParseResponse,
+)
+from app.services.redis_client import enqueue_parse_job, get_job_status
 
 router = APIRouter(tags=["parse"])
 
 
-class ParseRequest(BaseModel):
-    paper_id: str
-    file_url: str
+def _generate_job_id() -> str:
+    return f"job_{uuid.uuid4().hex[:16]}"
 
 
-class ParseResponse(BaseModel):
-    job_id: str
-    status: str
+@router.post("/parse", response_model=ApiResponse)
+async def submit_parse(
+    req: ParseRequest,
+    redis_client: redis.Redis = Depends(get_redis),
+) -> ApiResponse:
+    """Submit a PDF parsing task to the Redis queue."""
+    job_id = _generate_job_id()
+    payload = ParseJobPayload(
+        job_id=job_id,
+        paper_id=req.paper_id,
+        file_url=req.file_url,
+    )
+    await enqueue_parse_job(redis_client, payload)
+    return ApiResponse(
+        data=ParseResponse(job_id=job_id, status="QUEUED"),
+    )
 
 
-@router.post("/parse", response_model=ParseResponse)
-async def submit_parse(req: ParseRequest):
-    """提交 PDF 解析任务"""
-    # TODO: 生成 job_id，写入 Redis List，由后台 worker 消费
-    return ParseResponse(job_id="job_dummy", status="queued")
-
-
-@router.get("/parse/{job_id}")
-async def get_parse_status(job_id: str):
-    """查询解析状态"""
-    # TODO: 查询任务状态
-    return {"job_id": job_id, "status": "queued"}
+@router.get("/parse/{job_id}", response_model=ApiResponse)
+async def get_parse_status(
+    job_id: str,
+    redis_client: redis.Redis = Depends(get_redis),
+) -> ApiResponse:
+    """Get the current status of a parse job."""
+    status = await get_job_status(redis_client, job_id)
+    if status is None:
+        return ApiResponse(
+            code=404,
+            data=None,
+            message="Job not found",
+        )
+    return ApiResponse(data=status)
