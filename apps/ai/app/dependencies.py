@@ -6,12 +6,12 @@ import httpx
 import redis.asyncio as redis
 from fastapi import Request
 
-from app.config import settings
+from app.services.redis_client import create_redis_client
 
 
 async def get_redis() -> AsyncGenerator[redis.Redis, None]:
     """Yield an async Redis client."""
-    client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    client = create_redis_client()
     try:
         yield client
     finally:

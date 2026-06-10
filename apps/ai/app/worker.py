@@ -17,7 +17,7 @@ from app.services.extractor import Extractor
 from app.services.http_client import create_http_client
 from app.services.llm_client import LLMClient
 from app.services.pdf_parser import download_pdf, parse_pdf
-from app.services.redis_client import fetch_parse_job, update_job_status
+from app.services.redis_client import create_redis_client, fetch_parse_job, update_job_status
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ async def process_job(
 
 async def worker_loop(worker_id: int) -> None:
     """Single worker loop that consumes from Redis and processes jobs."""
-    redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    redis_client = create_redis_client()
     http_client = create_http_client()
     llm = LLMClient()
 

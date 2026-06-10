@@ -9,6 +9,16 @@ from app.config import settings
 from app.schemas import ParseJobPayload, ParseStatusResponse
 
 
+def create_redis_client() -> redis.Redis:
+    """Create an async Redis client with appropriate timeouts."""
+    return redis.from_url(
+        settings.REDIS_URL,
+        decode_responses=True,
+        socket_timeout=15,
+        socket_connect_timeout=5,
+    )
+
+
 def _job_key(job_id: str) -> str:
     return f"{settings.REDIS_JOB_KEY_PREFIX}:{job_id}"
 
