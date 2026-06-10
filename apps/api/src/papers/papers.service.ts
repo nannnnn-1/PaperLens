@@ -130,7 +130,7 @@ export class PapersService {
       },
     });
 
-    const fileUrl = this.files.getPublicUrl(dto.objectKey);
+    const { presignedUrl: fileUrl } = await this.files.presignDownload(dto.objectKey);
     const jobId = await this.ai.pushParseJob(paper.id, fileUrl, dto.objectKey);
 
     await this.prisma.paper.update({
@@ -154,7 +154,7 @@ export class PapersService {
     const info = (paper.fileInfo ?? {}) as { objectKey?: string };
     if (!info.objectKey) throw new UnprocessableEntityException("无文件可解析");
 
-    const fileUrl = this.files.getPublicUrl(info.objectKey);
+    const { presignedUrl: fileUrl } = await this.files.presignDownload(info.objectKey);
     const jobId = await this.ai.pushParseJob(id, fileUrl, info.objectKey);
 
     await this.prisma.paper.update({
