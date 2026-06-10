@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+__pycache__/
+.venv/
+venv/
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Database
+*.db
+*.sqlite
+
+# Temp
+tmp/
+temp/
+uploads/
+
+# Prisma
+prisma/migrations/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Python
+*.pyc
+*.pyo
+*.egg
+.eggs/
+
+# MinIO local data
+miniodata/
