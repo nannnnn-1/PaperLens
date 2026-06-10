@@ -39,18 +39,20 @@ export class AiGatewayService {
   async submitParseJob(
     paperId: string,
     fileUrl: string,
+    objectKey: string,
   ): Promise<{ jobId: string }> {
     try {
       const { data } = await firstValueFrom(
         this.http.post<{ jobId: string }>(`${this.baseUrl}/parse`, {
           paper_id: paperId,
           file_url: fileUrl,
+          object_key: objectKey,
         }),
       );
       return data;
     } catch (err) {
       this.logger.warn(`AI parse submit failed: ${(err as Error).message}`);
-      const jobId = await this.pushParseJob(paperId, fileUrl);
+      const jobId = await this.pushParseJob(paperId, fileUrl, objectKey);
       return { jobId };
     }
   }
