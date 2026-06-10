@@ -1,12 +1,35 @@
-function App() {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">PaperLens</h1>
-        <p className="text-gray-600">你的私人学术情报官</p>
-      </div>
-    </div>
-  )
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from '@/components/Layout';
+import LoginPage from '@/pages/LoginPage';
+import PaperListPage from '@/pages/PaperListPage';
+import ReadingRoomPage from '@/pages/ReadingRoomPage';
+import ArchivePage from '@/pages/ArchivePage';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/stores/authStore';
+
+function HydrateWrapper({ children }: { children: React.ReactNode }) {
+  const hydrate = useAuthStore((s) => s.hydrate);
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+  return <>{children}</>;
 }
 
-export default App
+function App() {
+  return (
+    <BrowserRouter>
+      <HydrateWrapper>
+        <Layout>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<PaperListPage />} />
+            <Route path="/papers/:id" element={<ReadingRoomPage />} />
+            <Route path="/papers/:id/archive" element={<ArchivePage />} />
+          </Routes>
+        </Layout>
+      </HydrateWrapper>
+    </BrowserRouter>
+  );
+}
+
+export default App;
