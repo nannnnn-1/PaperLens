@@ -209,4 +209,8 @@ export class ParseCallbackDto {
   @ValidateNested()
   @Type(() => CallbackResultDto)
   result: CallbackResultDto;
+
+  @IsOptional()
+  @IsString()
+  error?: string;
 }

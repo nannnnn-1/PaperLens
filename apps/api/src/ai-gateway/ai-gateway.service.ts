@@ -9,6 +9,7 @@ export interface ParseJob {
   jobId: string;
   paperId: string;
   fileUrl: string;
+  objectKey: string;
 }
 
 @Injectable()
@@ -27,9 +28,9 @@ export class AiGatewayService {
     );
   }
 
-  async pushParseJob(paperId: string, fileUrl: string): Promise<string> {
+  async pushParseJob(paperId: string, fileUrl: string, objectKey: string): Promise<string> {
     const jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const payload = JSON.stringify({ jobId, paperId, fileUrl });
+    const payload = JSON.stringify({ jobId, paperId, fileUrl, objectKey });
     await this.redis.lpush("parse:queue", payload);
     this.logger.log(`Parse job pushed: ${jobId} for paper ${paperId}`);
     return jobId;

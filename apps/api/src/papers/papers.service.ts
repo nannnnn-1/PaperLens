@@ -131,7 +131,7 @@ export class PapersService {
     });
 
     const fileUrl = this.files.getPublicUrl(dto.objectKey);
-    const jobId = await this.ai.pushParseJob(paper.id, fileUrl);
+    const jobId = await this.ai.pushParseJob(paper.id, fileUrl, dto.objectKey);
 
     await this.prisma.paper.update({
       where: { id: paper.id },
@@ -155,7 +155,7 @@ export class PapersService {
     if (!info.objectKey) throw new UnprocessableEntityException("无文件可解析");
 
     const fileUrl = this.files.getPublicUrl(info.objectKey);
-    const jobId = await this.ai.pushParseJob(id, fileUrl);
+    const jobId = await this.ai.pushParseJob(id, fileUrl, info.objectKey);
 
     await this.prisma.paper.update({
       where: { id },
