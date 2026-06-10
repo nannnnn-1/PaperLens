@@ -3,7 +3,20 @@
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
+
+
+# ==================== Base for Nest.js interop ====================
+
+
+class NestJsModel(BaseModel):
+    """Base model that accepts both camelCase (from Nest.js) and snake_case."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
 
 
 # ==================== Envelope ====================
@@ -23,30 +36,30 @@ class ApiResponse(BaseModel):
 # ==================== Parse ====================
 
 
-class ParseRequest(BaseModel):
+class ParseRequest(NestJsModel):
     paper_id: str
     file_url: str
 
 
-class ParseResponse(BaseModel):
+class ParseResponse(NestJsModel):
     job_id: str
     status: str
 
 
-class ParseStatusResponse(BaseModel):
+class ParseStatusResponse(NestJsModel):
     job_id: str
     status: str
     progress: Optional[float] = None
     error: Optional[str] = None
 
 
-class ParseJobPayload(BaseModel):
+class ParseJobPayload(NestJsModel):
     job_id: str
     paper_id: str
     file_url: str
 
 
-class ParseCallbackPayload(BaseModel):
+class ParseCallbackPayload(NestJsModel):
     job_id: str
     paper_id: str
     status: str

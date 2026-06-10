@@ -5,6 +5,7 @@ from typing import Any, Dict
 import httpx
 
 from app.config import settings
+from app.schemas import ParseCallbackPayload
 
 
 def _callback_url() -> str:
@@ -28,11 +29,12 @@ def build_callback_payload(
     result: Dict[str, Any],
     error: str = "",
 ) -> Dict[str, Any]:
-    """Build the payload for Nest.js parse callback."""
-    return {
-        "job_id": job_id,
-        "paper_id": paper_id,
-        "status": status,
-        "result": result,
-        "error": error,
-    }
+    """Build the payload for Nest.js parse callback using camelCase."""
+    payload = ParseCallbackPayload(
+        job_id=job_id,
+        paper_id=paper_id,
+        status=status,
+        result=result,
+        error=error,
+    )
+    return payload.model_dump(by_alias=True, exclude_none=True)

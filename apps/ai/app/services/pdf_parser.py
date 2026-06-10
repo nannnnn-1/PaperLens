@@ -56,7 +56,21 @@ class PDFParseResult:
 
 
 async def download_pdf(http_client: httpx.AsyncClient, file_url: str) -> str:
-    """Download a PDF to a temporary file and return its path."""
+    """Download a PDF to a temporary file and return its path.
+
+    Supports http/https URLs via httpx, and file:// URLs via local copy.
+    """
+    if file_url.startswith("file://"):
+        from urllib.parse import urlparse
+        parsed = urlparse(file_url)
+        local_path = parsed.path
+        # On Windows, urlparse leaves a leading slash on absolute paths
+        if local_path.startswith("/") and len(local_path) > 2 and local_path[2] == ":":
+            local_path = local_path[1:]
+        if not os.path.exists(local_path):
+            raise FileNotFoundError(f"Local PDF not found: {local_path}")
+        return local_path
+
     resp = await http_client.get(file_url)
     resp.raise_for_status()
     content_length = len(resp.content)

@@ -58,10 +58,12 @@ async def process_job(
         method_cards = await extractor.extract_method_cards(blocks)
         await update_job_status(redis_client, job_id, "PARSING", progress=0.7)
 
-        # Embeddings
+        # Embeddings (may use a different provider from chat LLM)
+        embed_key = settings.OPENAI_EMBEDDING_API_KEY or settings.OPENAI_API_KEY or "sk-no-key"
+        embed_base = settings.OPENAI_EMBEDDING_BASE_URL or settings.OPENAI_BASE_URL
         openai_client = openai.AsyncOpenAI(
-            api_key=settings.OPENAI_API_KEY or "sk-no-key",
-            base_url=settings.OPENAI_BASE_URL,
+            api_key=embed_key,
+            base_url=embed_base,
             timeout=settings.LLM_TIMEOUT,
         )
         embedder = Embedder(openai_client)

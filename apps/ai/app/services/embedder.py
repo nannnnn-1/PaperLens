@@ -13,7 +13,7 @@ from tenacity import (
 
 from app.config import settings
 
-BATCH_SIZE = 32
+BATCH_SIZE = 8
 
 
 class Embedder:
